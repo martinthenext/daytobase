@@ -20,8 +20,11 @@ Include tags as single words, e.g. `#NotesToSelf` or `#smoking-kills`.
 _Commands_
 
 `/recent` - Print out ten most recent database records
+`/recent #tag` - Print out ten most recent database records tagged `#tag`
 
 '''
+HASHTAG_RE = ' (#[a-zA-Z0-9\-]+)'
+N_RECENT = 5
 
 def get_user_collection(user):
     client = MongoClient()
@@ -33,9 +36,17 @@ def get_user_collection(user):
 def recent(bot, update):
     user = update.message.from_user.username
     user_collection = get_user_collection(user)
-    recent_cur = user_collection.find().sort('time', -1).limit(10)
+
+    msg = update.message.text.replace('/recent', '')
+    find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
+
+    find = {}
+    if find_tags:
+        find['tags'] = {'$in': find_tags}
+
+    recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
     recent_str = '\n'.join(['```text\n' + str(p) + '\n```' for p in recent_cur])
-    update.message.reply_text('Last ten records:\n' + recent_str, parse_mode='Markdown')
+    update.message.reply_text('Recent records:\n' + recent_str, parse_mode='Markdown')
 
 
 def help(bot, update):
@@ -43,10 +54,8 @@ def help(bot, update):
 
 
 def get_document_from_message(msg):
-    #TODO pick out hashtags, allow for time modification
-    hashtag_re = ' (#[a-zA-Z0-9\-]+)'
-    tags = [t[1:] for t in re.findall(hashtag_re, msg)]
-    post = re.sub(hashtag_re, '', msg)
+    tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
+    post = re.sub(HASHTAG_RE, '', msg)
 
     doc = {
 	'time': datetime.utcnow(),
