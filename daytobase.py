@@ -19,7 +19,6 @@ def get_user_collection(user):
 
 
 def last_ten(bot, update):
-    update.message.reply_text('Hi!')
     user = update.message.from_user.username
     user_collection = get_user_collection(user)
     last_ten_cur = user_collection.find().sort('time', -1).limit(10)
