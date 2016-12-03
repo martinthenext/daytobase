@@ -4,13 +4,14 @@ import logging
 from pymongo import MongoClient
 from datetime import datetime
 import settings
+import re
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-RULES = ''' *Message me and I will records your message to the DB.*
+RULES = ''' *Message me and I will record your message to the DB.*
 
 _Formatting_
 
@@ -18,7 +19,7 @@ Include tags as single words, e.g. `#NotesToSelf` or `#smoking-kills`.
 
 _Commands_
 
-`/last_ten` - Print out ten most recent database records
+`/recent` - Print out ten most recent database records
 
 '''
 
@@ -29,12 +30,12 @@ def get_user_collection(user):
     return user_collection
 
 
-def last_ten(bot, update):
+def recent(bot, update):
     user = update.message.from_user.username
     user_collection = get_user_collection(user)
-    last_ten_cur = user_collection.find().sort('time', -1).limit(10)
-    last_ten_str = '\n'.join(['```text\n' + str(p) + '\n```' for p in last_ten_cur])
-    update.message.reply_text('Last ten records:\n' + last_ten_str, parse_mode='Markdown')
+    recent_cur = user_collection.find().sort('time', -1).limit(10)
+    recent_str = '\n'.join(['```text\n' + str(p) + '\n```' for p in recent_cur])
+    update.message.reply_text('Last ten records:\n' + recent_str, parse_mode='Markdown')
 
 
 def help(bot, update):
@@ -43,9 +44,14 @@ def help(bot, update):
 
 def get_document_from_message(msg):
     #TODO pick out hashtags, allow for time modification
+    hashtag_re = ' (#[a-zA-Z0-9\-]+)'
+    tags = [t[1:] for t in re.findall(hashtag_re, msg)]
+    post = re.sub(hashtag_re, '', msg)
+
     doc = {
 	'time': datetime.utcnow(),
-        'post': msg,
+        'post': post,
+        'tags': tags,
     }
     return doc
 
@@ -73,7 +79,7 @@ def main():
     dp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("last_ten", last_ten))
+    dp.add_handler(CommandHandler("recent", recent))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("start", help))
 
