@@ -10,6 +10,17 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+RULES = ''' *Message me and I will records your message to the DB.*
+
+_Formatting_
+
+Include tags as single words, e.g. `#NotesToSelf` or `#smoking-kills`. 
+
+_Commands_
+
+`/last_ten` - Print out ten most recent database records
+
+'''
 
 def get_user_collection(user):
     client = MongoClient()
@@ -27,7 +38,16 @@ def last_ten(bot, update):
 
 
 def help(bot, update):
-    update.message.reply_text('Message me and I will record your messages to a database')
+    update.message.reply_text(RULES, parse_mode='Markdown')
+
+
+def get_document_from_message(msg):
+    #TODO pick out hashtags, allow for time modification
+    doc = {
+	'time': datetime.utcnow(),
+        'post': msg,
+    }
+    return doc
 
 
 def pm(bot, update):
@@ -35,10 +55,8 @@ def pm(bot, update):
     user = update.message.from_user.username
     
     user_collection = get_user_collection(user)
-    doc_id = user_collection.insert_one({
-        'time': datetime.utcnow(),
-        'post': msg,
-    })
+    doc = get_document_from_message(msg)
+    doc_id = user_collection.insert_one(doc)
     if doc_id:
         update.message.reply_text('Posted to database')
 
@@ -57,6 +75,7 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("last_ten", last_ten))
     dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("start", help))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, pm))
