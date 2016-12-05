@@ -15,17 +15,19 @@ RULES = ''' *Message me and I will record your message to the DB.*
 
 _Formatting_
 
-Include tags as single words, e.g. `#NotesToSelf` or `#smoking-kills`. 
-
+Include tags as single words, e.g. `#NotesToSelf` or `#4ever21`
+Use `#t 2015.01.01 21:15` in your message to set time to Jan 1st 9:15 PM
 
 _Commands_
 
-`/recent` - Print out ten most recent database records
-`/recent #tag` - Print out ten most recent database records tagged `#tag`
+`/recent` - Print out most recent database records
+`/recent #tag` - Print out most recent database records tagged `#tag`
 
 '''
 HASHTAG_RE = r'#[a-zA-Z0-9]+'
-N_RECENT = 5
+N_RECENT = 10
+TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
+
 
 def get_user_collection(user):
     client = MongoClient()
@@ -35,7 +37,7 @@ def get_user_collection(user):
 
 
 def get_text_repr(doc):
-    time_str = doc['time'].strftime('%Y.%m.%d %H:%M:%S')
+    time_str = doc['time'].strftime(TIME_FORMAT)
     text = '_%s_\n%s' % (time_str, doc['post'])
     return text
 
@@ -61,11 +63,19 @@ def help(bot, update):
 
 
 def get_document_from_message(msg):
+    TIME_SET_RE = r'#t (\d{4}.\d{2}.\d{2} \d{1,2}:\d{1,2}:\d{1,2})'
+    timestamp = re.search(TIME_SET_RE, msg)
+    if timestamp:
+        explicit_time = datetime.strptime(timestamp.group(1), TIME_FORMAT)
+        msg = re.sub(TIME_SET_RE, '', msg)
+    else:
+        explicit_time = None
+
     tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
     post = msg
 
     doc = {
-	'time': datetime.utcnow(),
+	'time': explicit_time or datetime.utcnow(),
         'post': post,
         'tags': tags,
     }
