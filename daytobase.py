@@ -17,6 +17,7 @@ _Formatting_
 
 Include tags as single words, e.g. `#NotesToSelf` or `#smoking-kills`. 
 
+
 _Commands_
 
 `/recent` - Print out ten most recent database records
@@ -33,6 +34,12 @@ def get_user_collection(user):
     return user_collection
 
 
+def get_text_repr(doc):
+    time_str = doc['time'].strftime('%Y.%m.%d %H:%M:%S')
+    text = '_%s_\n%s' % (time_str, doc['post'])
+    return text
+
+
 def recent(bot, update):
     user = update.message.from_user.username
     user_collection = get_user_collection(user)
@@ -45,8 +52,8 @@ def recent(bot, update):
         find['tags'] = {'$in': find_tags}
 
     recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
-    recent_str = '\n'.join(['```text\n' + str(p) + '\n```' for p in recent_cur])
-    update.message.reply_text('Recent records:\n' + recent_str, parse_mode='Markdown')
+    recent_str = '\n\n'.join([get_text_repr(d) for d in recent_cur])
+    update.message.reply_text('Recent records:\n\n' + recent_str, parse_mode='Markdown')
 
 
 def help(bot, update):
