@@ -23,7 +23,7 @@ _Commands_
 `/recent #tag` - Print out ten most recent database records tagged `#tag`
 
 '''
-HASHTAG_RE = ' (#[a-zA-Z0-9\-]+)'
+HASHTAG_RE = r'#[a-zA-Z0-9]+'
 N_RECENT = 5
 
 def get_user_collection(user):
@@ -55,7 +55,7 @@ def help(bot, update):
 
 def get_document_from_message(msg):
     tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
-    post = re.sub(HASHTAG_RE, '', msg)
+    post = msg
 
     doc = {
 	'time': datetime.utcnow(),
