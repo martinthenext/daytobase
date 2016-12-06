@@ -63,10 +63,10 @@ def help(bot, update):
 
 
 def get_document_from_message(msg):
-    TIME_SET_RE = r'#t (\d{4}.\d{2}.\d{2} \d{1,2}:\d{1,2}:\d{1,2})'
+    TIME_SET_RE = r'#t (\d{4}.\d{2}.\d{2} \d{1,2}:\d{1,2})'
     timestamp = re.search(TIME_SET_RE, msg)
     if timestamp:
-        explicit_time = datetime.strptime(timestamp.group(1), TIME_FORMAT)
+        explicit_time = datetime.strptime(timestamp.group(1), TIME_FORMAT[:-3])
         msg = re.sub(TIME_SET_RE, '', msg)
     else:
         explicit_time = None
