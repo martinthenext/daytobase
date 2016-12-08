@@ -22,6 +22,7 @@ _Commands_
 
 `/recent` - Print out most recent database records
 `/recent #tag` - Print out most recent database records tagged `#tag`
+`/undo` - Delete a record you posted last
 
 '''
 HASHTAG_RE = r'#[a-zA-Z0-9]+'
@@ -56,6 +57,17 @@ def recent(bot, update):
     recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
     recent_str = '\n\n'.join([get_text_repr(d) for d in recent_cur])
     update.message.reply_text('Recent records:\n\n' + recent_str, parse_mode='Markdown')
+
+
+def undo(bot, update):
+    user = update.message.from_user.username
+    user_collection = get_user_collection(user)
+
+    last_added = user_collection.find({}).sort('_id', -1).next()
+    text = get_text_repr(last_added)
+    id_to_remove = last_added['_id']
+    user_collection.remove(id_to_remove)
+    update.message.reply_text('*Deleted*:\n\n' + text, parse_mode='Markdown')
 
 
 def help(bot, update):
@@ -108,6 +120,7 @@ def main():
     dp.add_handler(CommandHandler("recent", recent))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("start", help))
+    dp.add_handler(CommandHandler("undo", undo))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, pm))
