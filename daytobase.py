@@ -28,6 +28,8 @@ _Commands_
 HASHTAG_RE = r'#[a-zA-Z0-9]+'
 N_RECENT = 10
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
+SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
+SET_TIME_FORMAT = '%H:%M'
 
 
 def get_user_collection(user):
@@ -75,11 +77,11 @@ def help(bot, update):
 
 
 def get_document_from_message(msg):
-    TIME_SET_RE = r'#t (\d{4}.\d{2}.\d{2} \d{1,2}:\d{1,2})'
-    timestamp = re.search(TIME_SET_RE, msg)
+    DATETIME_SET_RE = r'#t (\d{4}.\d{2}.\d{2} \d{1,2}:\d{1,2})'
+    timestamp = re.search(DATETIME_SET_RE, msg)
     if timestamp:
-        explicit_time = datetime.strptime(timestamp.group(1), TIME_FORMAT[:-3])
-        msg = re.sub(TIME_SET_RE, '', msg)
+        explicit_time = datetime.strptime(timestamp.group(1), SET_DATETIME_FORMAT)
+        msg = re.sub(DATETIME_SET_RE, '', msg)
     else:
         explicit_time = None
 
