@@ -41,7 +41,7 @@ def get_user_collection(user):
 
 def get_text_repr(doc):
     time_str = doc['time'].strftime(TIME_FORMAT)
-    text = '_%s_\n%s' % (time_str, doc['post'])
+    text = '* %s\n%s' % (time_str, doc['post'])
     return text
 
 
@@ -58,7 +58,7 @@ def recent(bot, update):
 
     recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
     recent_str = '\n\n'.join([get_text_repr(d) for d in recent_cur])
-    update.message.reply_text('Recent records:\n\n' + recent_str, parse_mode='Markdown')
+    update.message.reply_text('Recent records:\n\n' + recent_str)
 
 
 def undo(bot, update):
@@ -69,7 +69,7 @@ def undo(bot, update):
     text = get_text_repr(last_added)
     id_to_remove = last_added['_id']
     user_collection.remove(id_to_remove)
-    update.message.reply_text('*Deleted*:\n\n' + text, parse_mode='Markdown')
+    update.message.reply_text('Deleted:\n\n' + text)
 
 
 def help(bot, update):
