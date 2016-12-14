@@ -72,6 +72,12 @@ def undo(bot, update):
     update.message.reply_text('Deleted:\n\n' + text)
 
 
+def export(bot, update):
+    chat_id = update.message.chat_id
+    url = 'http://davtyan.org/export.zip'
+    bot.send_document(chat_id, url)
+
+
 def help(bot, update):
     update.message.reply_text(RULES, parse_mode='Markdown')
 
@@ -123,6 +129,7 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("start", help))
     dp.add_handler(CommandHandler("undo", undo))
+    dp.add_handler(CommandHandler("export", export))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, pm))
