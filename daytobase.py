@@ -5,6 +5,8 @@ from pymongo import MongoClient
 from datetime import datetime
 import settings
 import re
+import unicodecsv as csv
+import os
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -30,6 +32,8 @@ N_RECENT = 10
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
+EXPORT_DIR = '/home/martin/export/'
+EXPORT_FILENAME = 'export.csv'
 
 
 def get_user_collection(user):
@@ -73,6 +77,28 @@ def undo(bot, update):
 
 
 def export(bot, update):
+    user = update.message.from_user.username
+    user_collection = get_user_collection(user)
+
+    msg = update.message.text.replace('/recent', '')
+    find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
+
+    find = {}
+    if find_tags:
+        find['tags'] = {'$in': find_tags}
+
+    cur = user_collection.find(find).sort('time', -1)
+    
+    export_dir = os.path.join(EXPORT_DIR, user)
+    if not os.path.exists(export_dir):
+        os.makedirs(export_dir)
+
+    export_path = os.path.join(export_dir, EXPORT_FILENAME)
+    with open(export_path, 'wb+') as f:
+        writer = csv.writer(f, encoding='utf-8')
+        [writer.writerow([d['time'].strftime(TIME_FORMAT), d['post']])
+         for d in cur]
+
     chat_id = update.message.chat_id
     url = 'http://davtyan.org/export.zip'
     bot.send_document(chat_id, url)

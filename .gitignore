@@ -12,3 +12,4 @@ settings.py
 
 # vim
 *.swp
+*.py.sw*
