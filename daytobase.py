@@ -54,7 +54,7 @@ def archive_and_host(path, zip_pwd):
     """
     filename = '%s.zip' % str(uuid.uuid4().hex)
     archive_path = os.path.join(settings.STATIC_DIR, filename)
-    subprocess.call(['7z', 'a', '-p%s' % pwd, '-y', location, path])
+    subprocess.call(['7z', 'a', '-p%s' % zip_pwd, '-y', archive_path, path])
     return '%s/%s' % (settings.STATIC_URL, filename)
 
 
@@ -110,7 +110,8 @@ def export(bot, update):
     find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
 
     msg = re.sub(HASHTAG_RE, '', msg)
-    password = msg.strip().split(' ')[0]
+    non_commands = [s for s in msg.strip().split(' ') if '/' not in s]
+    password = non_commands[0]
 
     find = {}
     if find_tags:
