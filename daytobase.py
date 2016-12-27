@@ -7,6 +7,8 @@ import settings
 import re
 import unicodecsv as csv
 import os
+import subprocess
+import uuid
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -25,6 +27,9 @@ _Commands_
 `/recent` - Print out most recent database records
 `/recent #tag` - Print out most recent database records tagged `#tag`
 `/undo` - Delete a record you posted last
+`/export PASSWORD` - Export all daytobase to an encrypted ZIP archive
+`/export PASSWORD #tag` - Export records tagged `#tag` to an encrypted ZIP archive
+
 
 '''
 HASHTAG_RE = r'#[a-zA-Z0-9]+'
@@ -33,7 +38,24 @@ TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
 EXPORT_DIR = '/home/martin/export/'
-EXPORT_FILENAME = 'export.csv'
+EXPORT_FILENAME = 'daytobase.csv'
+
+
+def archive_and_host(path, zip_pwd):
+    """ Put a file in a password-protected ZIP and host from a static www dir
+
+    Arguments:
+        path: path to a file to acrhive
+        zip_pwd: password to encrypt the ZIP archive
+
+    Returns:
+        URL of a hosted arhive
+
+    """
+    filename = '%s.zip' % str(uuid.uuid4().hex)
+    archive_path = os.path.join(settings.STATIC_DIR, filename)
+    subprocess.call(['7z', 'a', '-p%s' % pwd, '-y', location, path])
+    return '%s/%s' % (settings.STATIC_URL, filename)
 
 
 def get_user_collection(user):
@@ -47,6 +69,10 @@ def get_text_repr(doc):
     time_str = doc['time'].strftime(TIME_FORMAT)
     text = '* %s\n%s' % (time_str, doc['post'])
     return text
+
+
+def archive(to_archive, pwd, location):
+    subprocess.call(['7z', 'a', '-p%s' % pwd, '-y', location] + to_archive)
 
 
 def recent(bot, update):
@@ -83,24 +109,27 @@ def export(bot, update):
     msg = update.message.text.replace('/recent', '')
     find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
 
+    msg = re.sub(HASHTAG_RE, '', msg)
+    password = msg.strip().split(' ')[0]
+
     find = {}
     if find_tags:
         find['tags'] = {'$in': find_tags}
 
     cur = user_collection.find(find).sort('time', -1)
     
-    export_dir = os.path.join(EXPORT_DIR, user)
-    if not os.path.exists(export_dir):
-        os.makedirs(export_dir)
+    if not os.path.exists(settings.TEMP_DIR):
+        os.makedirs(settings.TEMP_DIR)
 
-    export_path = os.path.join(export_dir, EXPORT_FILENAME)
+    export_path = os.path.join(settings.TEMP_DIR, EXPORT_FILENAME)
     with open(export_path, 'wb+') as f:
         writer = csv.writer(f, encoding='utf-8')
         [writer.writerow([d['time'].strftime(TIME_FORMAT), d['post']])
          for d in cur]
 
+    url = archive_and_host(export_path, password)
+
     chat_id = update.message.chat_id
-    url = 'http://davtyan.org/export.zip'
     bot.send_document(chat_id, url)
 
 
