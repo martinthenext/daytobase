@@ -30,6 +30,7 @@ _Commands_
 `/export PASSWORD` - Export all daytobase to an encrypted ZIP archive
 `/export PASSWORD #tag` - Export records tagged `#tag` to an encrypted ZIP archive
 
+Service update channel - @daytobase
 
 '''
 HASHTAG_RE = r'#[a-zA-Z0-9]+'
