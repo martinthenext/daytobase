@@ -62,7 +62,17 @@ def archive_and_host(path, zip_pwd):
 def get_user_collection(user):
     client = MongoClient()
     database = client['daytobase']
-    user_collection = database[user]
+
+    print('Existing collections: {}'.format(database.collection_names()))
+
+    collection_name = str(user.id)
+    if collection_name not in database.collection_names():
+        collection_name_old = user.username
+        if collection_name_old in database.collection_names():
+            user_collection = database[collection_name_old]
+            user_collection.rename(collection_name)
+    
+    user_collection = database[collection_name]
     return user_collection
 
 
@@ -77,7 +87,7 @@ def archive(to_archive, pwd, location):
 
 
 def recent(bot, update):
-    user = update.message.from_user.username
+    user = update.message.from_user
     user_collection = get_user_collection(user)
 
     msg = update.message.text.replace('/recent', '')
@@ -93,7 +103,7 @@ def recent(bot, update):
 
 
 def undo(bot, update):
-    user = update.message.from_user.username
+    user = update.message.from_user
     user_collection = get_user_collection(user)
 
     last_added = user_collection.find({}).sort('_id', -1).next()
@@ -104,7 +114,7 @@ def undo(bot, update):
 
 
 def export(bot, update):
-    user = update.message.from_user.username
+    user = update.message.from_user
     user_collection = get_user_collection(user)
 
     msg = update.message.text.replace('/recent', '')
@@ -161,7 +171,7 @@ def get_document_from_message(msg):
 
 def pm(bot, update):
     msg = update.message.text
-    user = update.message.from_user.username
+    user = update.message.from_user
     
     user_collection = get_user_collection(user)
     doc = get_document_from_message(msg)
