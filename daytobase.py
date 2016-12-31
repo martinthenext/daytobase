@@ -63,15 +63,7 @@ def get_user_collection(user):
     client = MongoClient()
     database = client['daytobase']
 
-    print('Existing collections: {}'.format(database.collection_names()))
-
     collection_name = str(user.id)
-    if collection_name not in database.collection_names():
-        collection_name_old = user.username
-        if collection_name_old in database.collection_names():
-            user_collection = database[collection_name_old]
-            user_collection.rename(collection_name)
-    
     user_collection = database[collection_name]
     return user_collection
 
