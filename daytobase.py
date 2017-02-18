@@ -38,8 +38,6 @@ N_RECENT = 10
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
-EXPORT_DIR = '/home/martin/export/'
-EXPORT_FILENAME = 'daytobase.csv'
 
 
 def archive_and_host(path, zip_pwd):
@@ -109,7 +107,7 @@ def export(bot, update):
     user = update.message.from_user
     user_collection = get_user_collection(user)
 
-    msg = update.message.text.replace('/recent', '')
+    msg = update.message.text.replace('/export', '')
     find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
 
     msg = re.sub(HASHTAG_RE, '', msg)
@@ -125,7 +123,7 @@ def export(bot, update):
     if not os.path.exists(settings.TEMP_DIR):
         os.makedirs(settings.TEMP_DIR)
 
-    export_path = os.path.join(settings.TEMP_DIR, EXPORT_FILENAME)
+    export_path = os.path.join(settings.TEMP_DIR, settings.EXPORT_FILENAME)
     with open(export_path, 'wb+') as f:
         writer = csv.writer(f, encoding='utf-8')
         [writer.writerow([d['time'].strftime(TIME_FORMAT), d['post']])
