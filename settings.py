@@ -3,6 +3,8 @@ BOT_ACCESS_KEY = '<YOUR_BOT_KEY>'
 
 # Temporary dir for exports. Ideally you would clean up once in a while
 TEMP_DIR = '/tmp'
+# Filename for exports
+EXPORT_FILENAME = 'daytobase.csv'
 
 # External web server setup
 # A directory on your server that serves static content
