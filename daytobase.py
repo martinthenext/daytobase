@@ -15,20 +15,22 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-RULES = ''' *Message me and I will record your message to the DB.*
+RULES = ''' *Message me and I will record your message to the database.*
 
 _Formatting_
 
 Include tags as single words, e.g. `#NotesToSelf` or `#4ever21`
+
 Use `#t 2015.01.01 21:15` in your message to set time to Jan 1st 9:15 PM
 
 _Commands_
 
 `/recent` - Print out most recent database records
-`/recent #tag` - Print out most recent database records tagged `#tag`
+`/recent #sleep` - Print out most recent database records tagged `#sleep`
 `/undo` - Delete a record you posted last
-`/export PASSWORD` - Export all daytobase to an encrypted ZIP archive
-`/export PASSWORD #tag` - Export records tagged `#tag` to an encrypted ZIP archive
+`/export` - Export all database to an encrypted ZIP archive
+`/export 123` - Export all database to an encrypted ZIP archive with password '123'
+`/export #food` - Export records tagged `#food` to an encrypted ZIP archive
 
 Service update channel - @daytobase
 
@@ -112,8 +114,11 @@ def export(bot, update):
     find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
 
     msg = re.sub(HASHTAG_RE, '', msg)
-    non_commands = [s for s in msg.strip().split(' ') if '/' not in s]
-    password = non_commands[0]
+    non_commands = [s for s in msg.strip().split(' ') if '/' not in s and s]
+    if non_commands:
+        password = non_commands[0]
+    else:
+        password = uuid.uuid4().hex[:16]
 
     find = {}
     if find_tags:
@@ -134,6 +139,9 @@ def export(bot, update):
 
     chat_id = update.message.chat_id
     bot.send_document(chat_id, url)
+
+    update.message.reply_text(u'\U0001F4E9' + ' password: `%s`' % password, 
+                              parse_mode='Markdown')
 
 
 def help(bot, update):
