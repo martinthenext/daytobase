@@ -38,6 +38,7 @@ N_RECENT = 10
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
+POSTED_MSG = u'\U0001F4BF'
 
 
 def archive_and_host(path, zip_pwd):
@@ -167,7 +168,7 @@ def pm(bot, update):
     doc = get_document_from_message(msg)
     doc_id = user_collection.insert_one(doc)
     if doc_id:
-        update.message.reply_text('Posted to database')
+        update.message.reply_text(POSTED_MSG)
 
 
 def error(bot, update, error):
