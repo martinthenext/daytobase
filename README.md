@@ -1,11 +1,14 @@
 # Daytobase
 
-Could be useful to log various events during the day to my personal MongoDB instance for analysis.
+Notes are not documents, they are *messages*.
+
+Daytobase is a [Telegram](https://telegram.org/) bot that records whatever you send it to a database. You can sort and review records by hashtags and export them to CSV. Try it [here](https://telegram.me/daytobasebot)!
 
 ## Software requirements
 
-1. A static file server (like [nginx](https://www.nginx.com)) to serve your data exports
-2. `7z` to encrypt you data exports (`pip install p7zip-full`) 
+1. MongoDB instance running on the same machine as the bot
+2. A static file server (like [nginx](https://www.nginx.com)) to serve your data exports
+3. `7z` to encrypt your data exports (`pip install p7zip-full`) 
 
 ## Python packages
 
