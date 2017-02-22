@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
-from pymongo import MongoClient
+from pymongo import MongoClient, TEXT
 from datetime import datetime
 import settings
 import re
@@ -9,6 +10,7 @@ import unicodecsv as csv
 import os
 import subprocess
 import uuid
+
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -27,6 +29,7 @@ _Commands_
 
 `/recent` - Print out most recent database records
 `/recent #sleep` - Print out most recent database records tagged `#sleep`
+`/search banana` - Print out recent records containing text 'banana'
 `/undo` - Delete a record you posted last
 `/export` - Export all database to an encrypted ZIP archive
 `/export 123` - Export all database to an encrypted ZIP archive with password '123'
@@ -40,7 +43,8 @@ N_RECENT = 10
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
-POSTED_MSG = u'\U0001F4BF'
+POSTED_MSG = u'💿'
+EMPTY_MSG = u'¯\_(ツ)_/¯'
 
 
 def archive_and_host(path, zip_pwd):
@@ -71,7 +75,7 @@ def get_user_collection(user):
 
 def get_text_repr(doc):
     time_str = doc['time'].strftime(TIME_FORMAT)
-    text = '* %s\n%s' % (time_str, doc['post'])
+    text = u'•' + ' %s\n%s' % (time_str, doc['post'])
     return text
 
 
@@ -92,7 +96,27 @@ def recent(bot, update):
 
     recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
     recent_str = '\n\n'.join([get_text_repr(d) for d in recent_cur])
-    update.message.reply_text('Recent records:\n\n' + recent_str)
+    if not recent_str.strip():
+        recent_str = EMPTY_MSG
+    update.message.reply_text(recent_str)
+
+
+def search(bot, update):
+    user = update.message.from_user
+    user_collection = get_user_collection(user)
+
+    # make sure user collection has a text index
+    user_collection.create_index([('post', TEXT)], default_language='english')
+
+    msg = update.message.text.replace('/search', '')
+
+    res_cur = user_collection.find({'$text': {'$search': msg }}) \
+                             .sort('time', -1) \
+                             .limit(N_RECENT)
+    res_str = '\n\n'.join([get_text_repr(d) for d in res_cur])
+    if not res_str.strip():
+        res_str = EMPTY_MSG
+    update.message.reply_text(res_str)
 
 
 def undo(bot, update):
@@ -103,7 +127,7 @@ def undo(bot, update):
     text = get_text_repr(last_added)
     id_to_remove = last_added['_id']
     user_collection.remove(id_to_remove)
-    update.message.reply_text('Deleted:\n\n' + text)
+    update.message.reply_text(u'🗑\n\n' + text)
 
 
 def export(bot, update):
@@ -192,6 +216,7 @@ def main():
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("recent", recent))
+    dp.add_handler(CommandHandler("search", search))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("start", help))
     dp.add_handler(CommandHandler("undo", undo))
