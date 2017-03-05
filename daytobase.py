@@ -83,6 +83,11 @@ def archive(to_archive, pwd, location):
     subprocess.call(['7z', 'a', '-p%s' % pwd, '-y', location] + to_archive)
 
 
+def history_cursor_to_str(cur):
+    reprs = [get_text_repr(d) for d in cur]
+    return '\n\n'.join(reprs[::-1])
+
+
 def recent(bot, update):
     user = update.message.from_user
     user_collection = get_user_collection(user)
@@ -95,7 +100,7 @@ def recent(bot, update):
         find['tags'] = {'$in': find_tags}
 
     recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
-    recent_str = '\n\n'.join([get_text_repr(d) for d in recent_cur])
+    recent_str = history_cursor_to_str(recent_cur)
     if not recent_str.strip():
         recent_str = EMPTY_MSG
     update.message.reply_text(recent_str)
@@ -113,7 +118,7 @@ def search(bot, update):
     res_cur = user_collection.find({'$text': {'$search': msg }}) \
                              .sort('time', -1) \
                              .limit(N_RECENT)
-    res_str = '\n\n'.join([get_text_repr(d) for d in res_cur])
+    res_str = history_cursor_to_str(res_cur)
     if not res_str.strip():
         res_str = EMPTY_MSG
     update.message.reply_text(res_str)
