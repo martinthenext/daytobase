@@ -103,7 +103,9 @@ def recent(bot, update):
     recent_str = history_cursor_to_str(recent_cur)
     if not recent_str.strip():
         recent_str = EMPTY_MSG
-    update.message.reply_text(recent_str)
+    message = update.message.reply_text(POSTED_MSG)
+    bot.editMessageText(recent_str, user.id, message.message_id,
+                        disable_web_page_preview=True)
 
 
 def search(bot, update):
@@ -121,7 +123,9 @@ def search(bot, update):
     res_str = history_cursor_to_str(res_cur)
     if not res_str.strip():
         res_str = EMPTY_MSG
-    update.message.reply_text(res_str)
+    message = update.message.reply_text(POSTED_MSG)
+    bot.editMessageText(res_str, user.id, message.message_id,
+                        disable_web_page_preview=True)
 
 
 def undo(bot, update):
