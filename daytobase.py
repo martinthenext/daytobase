@@ -38,7 +38,7 @@ _Commands_
 Service update channel - @daytobase
 
 '''
-HASHTAG_RE = r'#[a-zA-Z0-9]+'
+HASHTAG_RE = re.compile(ur'#\w+', re.UNICODE)
 N_RECENT = 10
 TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
@@ -93,7 +93,7 @@ def recent(bot, update):
     user_collection = get_user_collection(user)
 
     msg = update.message.text.replace('/recent', '')
-    find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
+    find_tags = [t[1:] for t in HASHTAG_RE.findall(msg)]
 
     find = {}
     if find_tags:
@@ -142,7 +142,7 @@ def export(bot, update):
     msg = update.message.text.replace('/export', '')
     find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
 
-    msg = re.sub(HASHTAG_RE, '', msg)
+    msg = HASHTAG_RE.sub('', msg)
     non_commands = [s for s in msg.strip().split(' ') if '/' not in s and s]
     if non_commands:
         password = non_commands[0]
@@ -186,7 +186,7 @@ def get_document_from_message(msg):
     else:
         explicit_time = None
 
-    tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
+    tags = [t[1:] for t in HASHTAG_RE.findall(msg)]
     post = msg
 
     doc = {
