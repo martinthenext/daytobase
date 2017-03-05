@@ -3,7 +3,7 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 from pymongo import MongoClient, TEXT
-from datetime import datetime
+from datetime import datetime, timedelta
 import settings
 import re
 import unicodecsv as csv
@@ -40,10 +40,12 @@ Service update channel - @daytobase
 '''
 HASHTAG_RE = re.compile(ur'#\w+', re.UNICODE)
 N_RECENT = 10
-TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
-SET_DATETIME_FORMAT = '%Y.%m.%d %H:%M'
+LONG_TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
+SHORT_TIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
+DAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 POSTED_MSG = u'💿'
+WAITING_MSG = u'⌛'
 EMPTY_MSG = u'¯\_(ツ)_/¯'
 
 
@@ -73,8 +75,23 @@ def get_user_collection(user):
     return user_collection
 
 
+def get_day_shortname(time):
+    today = datetime.utcnow().date()
+    if time.date() == today:
+        return 't'
+
+    yesterday = today - timedelta(days=1)
+    if time.date() == yesterday:
+        return 'y'
+
+    weekday = DAY_NAMES[time.weekday()]
+    return weekday
+
+
 def get_text_repr(doc):
-    time_str = doc['time'].strftime(TIME_FORMAT)
+    time = doc['time']
+    day_shortname = get_day_shortname(time)
+    time_str = '%s (%s)' % (time.strftime(SHORT_TIME_FORMAT), day_shortname)
     text = u'•' + ' %s\n%s' % (time_str, doc['post'])
     return text
 
@@ -103,7 +120,7 @@ def recent(bot, update):
     recent_str = history_cursor_to_str(recent_cur)
     if not recent_str.strip():
         recent_str = EMPTY_MSG
-    message = update.message.reply_text(POSTED_MSG)
+    message = update.message.reply_text(WAITING_MSG)
     bot.editMessageText(recent_str, user.id, message.message_id,
                         disable_web_page_preview=True)
 
@@ -123,7 +140,7 @@ def search(bot, update):
     res_str = history_cursor_to_str(res_cur)
     if not res_str.strip():
         res_str = EMPTY_MSG
-    message = update.message.reply_text(POSTED_MSG)
+    message = update.message.reply_text(WAITING_MSG)
     bot.editMessageText(res_str, user.id, message.message_id,
                         disable_web_page_preview=True)
 
@@ -165,7 +182,7 @@ def export(bot, update):
     export_path = os.path.join(settings.TEMP_DIR, settings.EXPORT_FILENAME)
     with open(export_path, 'wb+') as f:
         writer = csv.writer(f, encoding='utf-8')
-        [writer.writerow([d['time'].strftime(TIME_FORMAT), d['post']])
+        [writer.writerow([d['time'].strftime(LONG_TIME_FORMAT), d['post']])
          for d in cur]
 
     url = archive_and_host(export_path, password)
@@ -185,7 +202,7 @@ def get_document_from_message(msg):
     DATETIME_SET_RE = r'#t (\d{4}.\d{2}.\d{2} \d{1,2}:\d{1,2})'
     timestamp = re.search(DATETIME_SET_RE, msg)
     if timestamp:
-        explicit_time = datetime.strptime(timestamp.group(1), SET_DATETIME_FORMAT)
+        explicit_time = datetime.strptime(timestamp.group(1), SHORT_TIME_FORMAT)
         msg = re.sub(DATETIME_SET_RE, '', msg)
     else:
         explicit_time = None
