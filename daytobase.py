@@ -27,13 +27,16 @@ Use `#t 2015.01.01 21:15` in your message to set time to Jan 1st 9:15 PM
 
 _Commands_
 
-`/recent` - Print out most recent database records
-`/recent #sleep` - Print out most recent database records tagged `#sleep`
-`/search banana` - Print out recent records containing text 'banana'
-`/undo` - Delete a record you posted last
-`/export` - Export all database to an encrypted ZIP archive
-`/export 123` - Export all database to an encrypted ZIP archive with password '123'
-`/export #food` - Export records tagged `#food` to an encrypted ZIP archive
+`/recent` - print out most recent database records
+`/recent #sleep` - print out most recent database records tagged `#sleep`
+`/recent ?` - print out most recent untagged records
+
+`/search banana` - print out recent records containing text 'banana'
+`/undo` - delete a record you posted last
+
+`/export` - export all database to an encrypted ZIP archive
+`/export 123` - export all database to an encrypted ZIP archive with password '123'
+`/export #food` - export records tagged `#food` to an encrypted ZIP archive
 
 Service update channel - @daytobase
 
@@ -45,7 +48,6 @@ SHORT_TIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
 DAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 POSTED_MSG = u'💿'
-WAITING_MSG = u'⌛'
 EMPTY_MSG = u'¯\_(ツ)_/¯'
 
 
@@ -115,6 +117,8 @@ def recent(bot, update):
     find = {}
     if find_tags:
         find['tags'] = {'$in': find_tags}
+    elif msg.strip() == '?':
+        find['tags'] = {'$size': 0}
 
     recent_cur = user_collection.find(find).sort('time', -1).limit(N_RECENT)
     recent_str = history_cursor_to_str(recent_cur)
