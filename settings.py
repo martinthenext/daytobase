@@ -11,3 +11,6 @@ EXPORT_FILENAME = 'daytobase.csv'
 STATIC_DIR = '/var/www/daytobase'
 # A URL at which this static content is served
 STATIC_URL = r'http://localhost/daytobase'
+
+# Admin user ids to access usage statistics
+ADMIN_IDS = []
