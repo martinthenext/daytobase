@@ -228,7 +228,7 @@ def stats(bot, update):
         db = client['daytobase']
         coll_counts = [db[coll].count() for coll in db.collection_names()]
         response += '\nDaytobase has {} users\n'.format(len(coll_counts))
-        response += 'Biggest collection sizes: `{}`\n'.format(sorted(coll_counts)[:-3])
+        response += 'Biggest collection sizes: `{}`\n'.format(sorted(coll_counts)[-3:])
 
         month_ago = datetime.utcnow() - timedelta(days=30)
         recent_counts = [db[coll].find({'time': {'$lt': month_ago}}).count()
