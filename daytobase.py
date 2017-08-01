@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
-from pymongo import MongoClient, TEXT
+from pymongo import MongoClient, TEXT, DESCENDING
 from datetime import datetime, timedelta
 import settings
 import re
@@ -218,6 +218,28 @@ def get_document_from_message(msg):
     return doc
 
 
+def stats(bot, update):
+    user = update.message.from_user
+    user_coll = get_user_collection(user)
+    response = 'Your Daytobase has {} records\n'.format(user_coll.count())
+
+    if user.id in settings.ADMIN_IDS:
+        client = MongoClient()
+        db = client['daytobase']
+        coll_counts = [db[coll].count() for coll in db.collection_names()]
+        response += '\nDaytobase has {} users\n'.format(len(coll_counts))
+        response += 'Biggest collection sizes: `{}`\n'.format(sorted(coll_counts)[:-3])
+
+        month_ago = datetime.utcnow() - timedelta(days=30)
+        recent_counts = [db[coll].find({'time': {'$lt': month_ago}}).count()
+                         for coll in db.collection_names()]
+        response += 'New records over past 30 days: {}\n'.format(sum(recent_counts))
+        active_colls = sum([c > 0 for c in recent_counts])
+        response += 'Users active over past 30 days: {}\n'.format(active_colls)
+    
+    update.message.reply_text(response, parse_mode='Markdown')
+    
+
 def pm(bot, update):
     msg = update.message.text
     user = update.message.from_user
@@ -247,6 +269,7 @@ def main():
     dp.add_handler(CommandHandler("start", help))
     dp.add_handler(CommandHandler("undo", undo))
     dp.add_handler(CommandHandler("export", export))
+    dp.add_handler(CommandHandler("stats", stats))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, pm))
