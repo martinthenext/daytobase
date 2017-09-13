@@ -1,5 +1,7 @@
 # Daytobase
 
+[![Join the chat at https://gitter.im/daytobase/Lobby](https://badges.gitter.im/daytobase/Lobby.svg)](https://gitter.im/daytobase/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Notes are not documents, they are *messages*.
 
 Daytobase is a [Telegram](https://telegram.org/) bot that records whatever you send it to a database. You can review records by hashtags, search by text and export them to CSV. Try it [here](https://telegram.me/daytobasebot)!
