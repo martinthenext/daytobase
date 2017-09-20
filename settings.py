@@ -1,4 +1,4 @@
-impot os
+import os
 # Your Telegram bot access key
 BOT_ACCESS_KEY = os.environ['BOT_ACCESS_KEY']
 
