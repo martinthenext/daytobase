@@ -259,7 +259,7 @@ def tags(bot, update):
 
     count_strs = (u'#{}: {}'.format(*t) for t in counts.iteritems())
     response = u'🏷\n{}'.format('\n'.join(count_strs))
-    print response
+    update.message.reply_text(response)
 
 def pm(bot, update):
     msg = update.message.text
