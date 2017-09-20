@@ -1,5 +1,6 @@
+impot os
 # Your Telegram bot access key
-BOT_ACCESS_KEY = '<YOUR_BOT_KEY>'
+BOT_ACCESS_KEY = os.environ['BOT_ACCESS_KEY']
 
 # Temporary dir for exports. Ideally you would clean up once in a while
 TEMP_DIR = '/tmp'

@@ -10,6 +10,7 @@ import unicodecsv as csv
 import os
 import subprocess
 import uuid
+from collections import OrderedDict
 
 
 # Enable logging
@@ -175,7 +176,7 @@ def export(bot, update):
         find['tags'] = {'$in': find_tags}
 
     cur = user_collection.find(find).sort('time', -1)
-    
+
     if not os.path.exists(settings.TEMP_DIR):
         os.makedirs(settings.TEMP_DIR)
 
@@ -190,7 +191,7 @@ def export(bot, update):
     chat_id = update.message.chat_id
     bot.send_document(chat_id, url)
 
-    update.message.reply_text(u'\U0001F4E9' + ' password: `%s`' % password, 
+    update.message.reply_text(u'\U0001F4E9' + ' password: `%s`' % password,
                               parse_mode='Markdown')
 
 
@@ -236,14 +237,34 @@ def stats(bot, update):
         response += 'New records over past 30 days:  `{}`\n'.format(sum(recent_counts))
         active_colls = sum([c > 0 for c in recent_counts])
         response += 'Users active over past 30 days: `{}`\n'.format(active_colls)
-    
+
     update.message.reply_text(response, parse_mode='Markdown')
-    
+
+def tags(bot, update):
+    user = update.message.from_user
+    user_collection = get_user_collection(user)
+    cursor = user_collection.find().sort('time', -1)
+    counts = OrderedDict()
+
+    for doc in cursor:
+        if len(counts) >= N_RECENT:
+            break
+        for tag in list(set(doc['tags'])):
+            if len(counts) >= N_RECENT:
+                break
+            if tag in counts:
+                counts[tag] += 1
+            else:
+                counts[tag] = 1
+
+    count_strs = (u'#{}: {}'.format(*t) for t in counts.iteritems())
+    response = u'🏷\n{}'.format('\n'.join(count_strs))
+    print response
 
 def pm(bot, update):
     msg = update.message.text
     user = update.message.from_user
-    
+
     user_collection = get_user_collection(user)
     doc = get_document_from_message(msg)
     doc_id = user_collection.insert_one(doc)
@@ -270,6 +291,7 @@ def main():
     dp.add_handler(CommandHandler("undo", undo))
     dp.add_handler(CommandHandler("export", export))
     dp.add_handler(CommandHandler("stats", stats))
+    dp.add_handler(CommandHandler("tags", tags))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, pm))
@@ -288,4 +310,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
