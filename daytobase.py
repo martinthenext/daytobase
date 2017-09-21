@@ -208,7 +208,8 @@ def get_document_from_message(msg):
     else:
         explicit_time = None
 
-    tags = [t[1:] for t in HASHTAG_RE.findall(msg)]
+    # remove duplicate tags in the message
+    tags = list(set([t[1:] for t in HASHTAG_RE.findall(msg)]))
     post = msg
 
     doc = {
@@ -249,7 +250,7 @@ def tags(bot, update):
     for doc in cursor:
         if len(counts) >= N_RECENT:
             break
-        for tag in list(set(doc['tags'])):
+        for tag in doc['tags']:
             if len(counts) >= N_RECENT:
                 break
             if tag in counts:
