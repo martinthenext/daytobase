@@ -6,7 +6,7 @@ from coverage import coverage
 
 from datetime import datetime
 import pytz
-import timezone_conversions
+import timezone
 
 class User(object):
     "User with a timezone attribute as a string"
@@ -14,7 +14,7 @@ class User(object):
         self.timezone = "Europe/London"
         self.time_format = '%Y.%m.%d %H:%M:%S'
 
-class Test_timezone_conversion(unittest.TestCase):
+class Test_timezone(unittest.TestCase):
     def setUp(self):
         self.user = User()
 
@@ -27,7 +27,7 @@ class Test_timezone_conversion(unittest.TestCase):
         The output should be a string.
         """
         utcnow = datetime.utcnow()
-        dt_user = timezone_conversions.get_datetime_repr(dt=utcnow, user=self.user)
+        dt_user = timezone.get_datetime_repr(dt=utcnow, user=self.user)
         test_dt_user = pytz.timezone(self.user.timezone).fromutc(utcnow).strftime(self.user.time_format)
         assert type(dt_user) == str
         assert dt_user == test_dt_user

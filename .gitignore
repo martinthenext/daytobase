@@ -8,7 +8,7 @@ venv/
 ENV/
 
 # Local settings
-settings.py
+# settings.py
 
 # vim
 *.swp
