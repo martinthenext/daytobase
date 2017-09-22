@@ -1,0 +1,5 @@
+certifi==2017.7.27.1
+future==0.16.0
+pymongo==3.5.1
+python-telegram-bot==8.0
+unicodecsv==0.14.1
