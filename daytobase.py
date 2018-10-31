@@ -267,13 +267,17 @@ def count(bot, update):
                     }
                 )
             ]
+    
+    if find_tags:
+        tag_list = ' or '.join(['*{}*'.format(t) for t in find_tags])
+        count_summary = '🗄 tagged {}:\n'.format(tag_list)
+    else:
+        count_summary = '🗄 counts:\n'
 
-    count_summary = '🗄 tagged {}:\n'.format(
-            ' or '.join(['*{}*'.format(t) for t in find_tags]))
     for interval_name, interval_condition in count_intervals:
-        count = user_coll.find(
-                {'time': interval_condition, 'tags': {'$in': find_tags}}
-                ).count()
+        find_condition = {'tags': {'$in': find_tags}} if find_tags else {}
+        find_condition['time'] = interval_condition
+        count = user_coll.find(find_condition).count()
         count_summary += '- {}: {}\n'.format(interval_name, count)
 
     update.message.reply_text(count_summary, parse_mode='Markdown')
