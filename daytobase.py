@@ -38,6 +38,8 @@ _Commands_
 `/export 123` - export all database to an encrypted ZIP archive with password '123'
 `/export #food` - export records tagged `#food` to an encrypted ZIP archive
 
+`/count #food` - count a number of recent records tagged `#food`
+
 Service update channel - @daytobase
 
 '''
@@ -247,6 +249,34 @@ def stats(bot, update):
         response += 'Users active over past 30 days: `{}`\n'.format(active_colls)
     
     update.message.reply_text(response, parse_mode='Markdown')
+
+
+def count(bot, update):
+    user = update.message.from_user
+    user_coll = get_user_collection(user)
+    
+    msg = update.message.text.replace('/export', '')
+    find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
+
+    count_intervals = [
+                ('last 7 days', {'$gt': datetime.utcnow() - timedelta(days=7)}),
+                ('last 30 days', {'$gt': datetime.utcnow() - timedelta(days=30)}),
+                ('previous 30 days', {
+                    '$gt': datetime.utcnow() - timedelta(days=60),
+                    '$lte': datetime.utcnow() - timedelta(days=30)
+                    }
+                )
+            ]
+
+    count_summary = '🗄 tagged {}:\n'.format(
+            ' or '.join(['*{}*'.format(t) for t in find_tags]))
+    for interval_name, interval_condition in count_intervals:
+        count = user_coll.find(
+                {'time': interval_condition, 'tags': {'$in': find_tags}}
+                ).count()
+        count_summary += '- {}: {}\n'.format(interval_name, count)
+
+    update.message.reply_text(count_summary, parse_mode='Markdown')
     
 
 def pm(bot, update):
@@ -279,6 +309,7 @@ def main():
     dp.add_handler(CommandHandler("undo", undo))
     dp.add_handler(CommandHandler("export", export))
     dp.add_handler(CommandHandler("stats", stats))
+    dp.add_handler(CommandHandler("count", count))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, pm))
