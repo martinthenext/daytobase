@@ -156,6 +156,11 @@ def undo(bot, update):
     update.message.reply_text(u'🗑\n\n' + text)
 
 
+def get_first_hashtag(post):
+    tags = HASHTAG_RE.findall(post)
+    return tags[0] if tags else ''
+
+
 def export(bot, update):
     user = update.message.from_user
     user_collection = get_user_collection(user)
@@ -182,8 +187,12 @@ def export(bot, update):
     export_path = os.path.join(settings.TEMP_DIR, settings.EXPORT_FILENAME)
     with open(export_path, 'wb+') as f:
         writer = csv.writer(f, encoding='utf-8')
-        [writer.writerow([d['time'].strftime(LONG_TIME_FORMAT), d['post']])
-         for d in cur]
+        writer.writerow(['Time', 'Tag', 'Record'])
+        [writer.writerow([
+                d['time'].strftime(LONG_TIME_FORMAT),
+                get_first_hashtag(d['post']),
+                d['post']
+                ]) for d in cur]
 
     url = archive_and_host(export_path, password)
 
