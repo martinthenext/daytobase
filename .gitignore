@@ -14,3 +14,9 @@ settings.py
 *.swp
 *.py.sw*
 
+*.zip
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+response.json
