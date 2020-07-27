@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 from pymongo import MongoClient, TEXT, DESCENDING
 from datetime import datetime, timedelta
 import settings
 import re
-import unicodecsv as csv
+import csv
 import os
 import subprocess
 import uuid
