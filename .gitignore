@@ -5,11 +5,12 @@ __pycache__/
 
 # virtualenv
 venv/
-ENV/
 
 # Local settings
+.envrc
 settings.py
 
 # vim
 *.swp
 *.py.sw*
+
