@@ -1,22 +1,19 @@
 #`{ nixpkgs ? import <nixpkgs> {} }:
 { pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/2b7c0dcdaab946153b0eaba5f2420f15ea27b0d6.tar.gz") {}}:
 
-pkgs.mkShell {
+with pkgs; mkShell {
   buildInputs = [
-    #pkgs.direnv
-    pkgs.python38
-    pkgs.python38Packages.python-telegram-bot
-    pkgs.terraform
-    pkgs.awscli2
-    pkgs.zip
+    #direnv
+    toilet
+    python38
+    python38Packages.python-telegram-bot
+    terraform
+    awscli2
+    zip
   ];
 
   shellHook = ''
-    echo "welcome to daytobase!"
+    toilet Daytobase -f future --gay
     # eval "$(direnv hook bash)"
-
-    # alias ls="ls --color=auto"
-    # alias l="ls"
-    # alias ll="ls -lha"
   '';
 }
