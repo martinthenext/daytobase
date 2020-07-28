@@ -17,6 +17,6 @@ settings.py
 *.zip
 .terraform/
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 
 response.json

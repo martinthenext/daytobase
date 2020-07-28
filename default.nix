@@ -9,7 +9,6 @@ with pkgs; mkShell {
     python38Packages.python-telegram-bot
     terraform
     awscli2
-    zip
     jq
   ];
 

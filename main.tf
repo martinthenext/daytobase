@@ -18,9 +18,9 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_lambda_function" "daytobase" {
-  function_name    = var.function_name
+  function_name    = "daytobase_lambda"
   handler          = "main.handler"
-  runtime          = "nodejs10.x"
+  runtime          = "python3.8"
   role             = aws_iam_role.lambda_exec.arn
   filename         = "lambda.zip"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
@@ -76,7 +76,7 @@ resource "aws_lambda_permission" "apigw" {
 
 # CloudWatch
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
-  name              = "/aws/lambda/${var.function_name}"
+  name              = "/aws/lambda/${aws_lambda_function.daytobase.function_name}"
   retention_in_days = 30
 }
 
@@ -86,8 +86,8 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
 # -----------------------------------------------------------------------------
 
 resource "aws_api_gateway_rest_api" "lambda_api" {
-  name        = "lambda_api"
-  description = "Daytobase serverless handler"
+  name        = "daytobase_api"
+  description = "Daytobase serverless server that serves requests."
 }
 
 resource "aws_api_gateway_resource" "proxy" {
