@@ -93,7 +93,7 @@ resource "aws_api_gateway_rest_api" "lambda_api" {
 resource "aws_api_gateway_resource" "proxy" {
   rest_api_id = aws_api_gateway_rest_api.lambda_api.id
   parent_id   = aws_api_gateway_rest_api.lambda_api.root_resource_id
-  path_part   = "{proxy+}"
+  path_part   = "api"
 }
 
 resource "aws_api_gateway_method" "proxy" {
@@ -115,34 +115,34 @@ resource "aws_api_gateway_integration" "lambda" {
 
 # ----- API root bullshit
 
-resource "aws_api_gateway_method" "proxy_root" {
-  rest_api_id   = aws_api_gateway_rest_api.lambda_api.id
-  resource_id   = aws_api_gateway_rest_api.lambda_api.root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
+# resource "aws_api_gateway_method" "proxy_root" {
+#   rest_api_id   = aws_api_gateway_rest_api.lambda_api.id
+#   resource_id   = aws_api_gateway_rest_api.lambda_api.root_resource_id
+#   http_method   = "ANY"
+#   authorization = "NONE"
+# }
 
-resource "aws_api_gateway_integration" "lambda_root" {
-  rest_api_id = aws_api_gateway_rest_api.lambda_api.id
-  resource_id = aws_api_gateway_method.proxy_root.resource_id
-  http_method = aws_api_gateway_method.proxy_root.http_method
+# resource "aws_api_gateway_integration" "lambda_root" {
+#   rest_api_id = aws_api_gateway_rest_api.lambda_api.id
+#   resource_id = aws_api_gateway_method.proxy_root.resource_id
+#   http_method = aws_api_gateway_method.proxy_root.http_method
 
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.daytobase.invoke_arn
-}
+#   integration_http_method = "POST"
+#   type                    = "AWS_PROXY"
+#   uri                     = aws_lambda_function.daytobase.invoke_arn
+# }
 
 #  ----
 
 resource "aws_api_gateway_deployment" "deployment" {
   depends_on = [
     aws_api_gateway_integration.lambda,
-    aws_api_gateway_integration.lambda_root,
+    # aws_api_gateway_integration.lambda_root,
   ]
   rest_api_id = aws_api_gateway_rest_api.lambda_api.id
   stage_name  = "prod"
 }
 
 output "api_url" {
-  value = aws_api_gateway_deployment.deployment.invoke_url
+  value = "${aws_api_gateway_deployment.deployment.invoke_url}/${aws_api_gateway_resource.proxy.path_part}"
 }
