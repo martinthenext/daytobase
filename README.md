@@ -19,6 +19,8 @@ use nix  # comment out if you don't use Nix.
 
 export AWS_ACCESS_KEY_ID="<YOUR_ACCESS_KEY_HERE>"
 export AWS_SECRET_ACCESS_KEY="<YOUR_SECRET_HERE>"
+export TF_VAR_region="eu-central-1"
+export AWS_DEFAULT_REGION=$TF_VAR_region
 ```
 
 Replace the placeholders with your actual config values and secrets.
