@@ -6,7 +6,7 @@ with pkgs; mkShell {
     # direnv
     toilet
     python38
-    python38Packages.python-telegram-bot
+    python38Packages.pip
     terraform
     awscli2
     jq
@@ -14,6 +14,7 @@ with pkgs; mkShell {
 
   shellHook = ''
     toilet Daytobase -f future --gay
+    alias tf=terraform
     # eval "$(direnv hook bash)"
   '';
 }

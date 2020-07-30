@@ -7,14 +7,24 @@ provider "archive" {
   version = "~>1.3"
 }
 
-data "aws_caller_identity" "current" {}
+resource "null_resource" "pip" {
+  triggers = {
+    # main         = "${base64sha256(file("../lambda/main.py"))}"
+    requirements = "${base64sha256(file("../requirements.txt"))}"
+  }
+
+  provisioner "local-exec" {
+    command = "rm -rf /tmp/lambda && cp -R ../lambda /tmp/lambda && pip install -r ../requirements.txt --target /tmp/lambda"
+  }
+}
+
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "${path.root}/lambda/"
-  output_path = "${path.root}/lambda.zip"
+  source_dir  = "/tmp/lambda/"
+  output_path = "/tmp/lambda.zip"
 
-  # depends_on = ["null_resource.pip"]
+  depends_on = [null_resource.pip]
 }
 
 resource "aws_lambda_function" "daytobase" {
@@ -23,7 +33,7 @@ resource "aws_lambda_function" "daytobase" {
   handler          = "main.handler"
   runtime          = "python3.8"
   role             = aws_iam_role.lambda_exec.arn
-  filename         = "lambda.zip"
+  filename         = "/tmp/lambda.zip"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 }
 
@@ -55,16 +65,6 @@ resource "aws_iam_role_policy_attachment" "logs_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# resource "aws_lambda_permission" "lambda_apigw" {
-#   statement_id  = "AllowExecutionFromAPIGateway"
-#   action        = "lambda:InvokeFunction"
-#   function_name = aws_lambda_function.daytobase.arn
-#   principal     = "apigateway.amazonaws.com"
-
-#   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-#   source_arn = "arn:aws:execute-api:${var.region}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.lambda_api.id}/*/${aws_api_gateway_method.proxy.http_method}${aws_api_gateway_resource.proxy.path}"
-# }
-
 resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
@@ -77,11 +77,11 @@ resource "aws_lambda_permission" "apigw" {
 }
 
 # CloudWatch
-resource "aws_cloudwatch_log_group" "lambda_log_group" {
-  tags              = var.tags
-  name              = "/aws/lambda/${aws_lambda_function.daytobase.function_name}"
-  retention_in_days = 30
-}
+# resource "aws_cloudwatch_log_group" "lambda_log_group" {
+#   tags              = var.tags
+#   name              = "/aws/lambda/${aws_lambda_function.daytobase.function_name}"
+#   retention_in_days = 30
+# }
 
 
 # -----------------------------------------------------------------------------
