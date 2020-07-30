@@ -99,7 +99,7 @@ resource "aws_api_gateway_resource" "proxy" {
 resource "aws_api_gateway_method" "proxy" {
   rest_api_id   = aws_api_gateway_rest_api.lambda_api.id
   resource_id   = aws_api_gateway_resource.proxy.id
-  http_method   = "ANY"
+  http_method   = "POST"
   authorization = "NONE"
 }
 
@@ -141,6 +141,12 @@ resource "aws_api_gateway_deployment" "deployment" {
   ]
   rest_api_id = aws_api_gateway_rest_api.lambda_api.id
   stage_name  = "prod"
+
+  triggers = {
+    redeployment = sha1(join(",", list(
+      jsonencode(aws_api_gateway_integration.example),
+    )))
+  }
 
   lifecycle {
     create_before_destroy = true
