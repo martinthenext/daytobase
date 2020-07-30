@@ -1,8 +1,12 @@
+import os
 import json
-import flask
 
 def handler(event, context):
+    return_body = {
+        'env': os.environ.__repr__(),
+        'TELEGRAM_TOKEN': os.environ.get('TELEGRAM_TOKEN')
+    }
     return {
         'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
+        'body': json.dumps(return_body)
     }

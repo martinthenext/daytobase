@@ -9,7 +9,7 @@ provider "archive" {
 
 resource "null_resource" "pip" {
   triggers = {
-    # main         = "${base64sha256(file("../lambda/main.py"))}"
+    main         = "${base64sha256(file("../lambda/main.py"))}"
     requirements = "${base64sha256(file("../requirements.txt"))}"
   }
 
@@ -38,7 +38,7 @@ resource "aws_lambda_function" "daytobase" {
 
   environment {
     variables = {
-      telegram_token = var.telegram_token
+      TELEGRAM_TOKEN = var.telegram_token
     }
   }
 }
