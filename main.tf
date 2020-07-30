@@ -144,7 +144,7 @@ resource "aws_api_gateway_deployment" "deployment" {
 
   triggers = {
     redeployment = sha1(join(",", list(
-      jsonencode(aws_api_gateway_integration.example),
+      jsonencode(aws_api_gateway_integration.lambda),
     )))
   }
 
