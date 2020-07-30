@@ -1,19 +1,20 @@
-{ nixpkgs ? import <nixpkgs> {} }:
+# { nixpkgs ? import <nixpkgs> {} }:
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/2b7c0dcdaab946153b0eaba5f2420f15ea27b0d6.tar.gz") {}}:
 
-nixpkgs.mkShell {
+with pkgs; mkShell {
   buildInputs = [
-    # nixpkgs.direnv
-    nixpkgs.mongodb-4_0
-    nixpkgs.python38
-    nixpkgs.python38Packages.python-telegram-bot
-    nixpkgs.python38Packages.pymongo
+    # direnv
+    toilet
+    python38
+    python38Packages.pip
+    terraform
+    awscli2
+    jq
   ];
 
   shellHook = ''
+    toilet Daytobase -f future --gay
+    alias tf=terraform
     # eval "$(direnv hook bash)"
-
-    # alias ls="ls --color=auto"
-    # alias l="ls"
-    # alias ll="ls -lha"
   '';
 }
