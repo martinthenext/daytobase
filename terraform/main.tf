@@ -35,6 +35,12 @@ resource "aws_lambda_function" "daytobase" {
   role             = aws_iam_role.lambda_exec.arn
   filename         = "/tmp/lambda.zip"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  environment {
+    variables = {
+      telegram_token = var.telegram_token
+    }
+  }
 }
 
 resource "aws_iam_role" "lambda_exec" {

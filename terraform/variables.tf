@@ -10,3 +10,7 @@ variable "tags" {
   description = "Application tag to mark Daytobase resources"
   type        = map(string)
 }
+
+variable "telegram_token" {
+  type = string
+}
