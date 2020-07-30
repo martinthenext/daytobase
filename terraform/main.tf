@@ -10,14 +10,13 @@ provider "archive" {
 resource "null_resource" "pip" {
   triggers = {
     main         = "${base64sha256(file("../lambda/main.py"))}"
-    requirements = "${base64sha256(file("../requirements.txt"))}"
+    requirements = "${base64sha256(file("../lambda/requirements.txt"))}"
   }
 
   provisioner "local-exec" {
-    command = "rm -rf /tmp/lambda && cp -R ../lambda /tmp/lambda && pip install -r ../requirements.txt --target /tmp/lambda"
+    command = "rm -rf /tmp/lambda && cp -R ../lambda /tmp/lambda && pip install -r ../lambda/requirements.txt --target /tmp/lambda"
   }
 }
-
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
