@@ -18,6 +18,7 @@ data "archive_file" "lambda_zip" {
 }
 
 resource "aws_lambda_function" "daytobase" {
+  tags             = var.tags
   function_name    = "daytobase_lambda"
   handler          = "main.handler"
   runtime          = "python3.8"
@@ -27,6 +28,7 @@ resource "aws_lambda_function" "daytobase" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
+  tags        = var.tags
   name        = "daytobase_iam"
   path        = "/"
   description = "Allows Lambda Function to call AWS services on your behalf."
@@ -76,6 +78,7 @@ resource "aws_lambda_permission" "apigw" {
 
 # CloudWatch
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  tags              = var.tags
   name              = "/aws/lambda/${aws_lambda_function.daytobase.function_name}"
   retention_in_days = 30
 }
@@ -86,6 +89,7 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
 # -----------------------------------------------------------------------------
 
 resource "aws_api_gateway_rest_api" "lambda_api" {
+  tags        = var.tags
   name        = "daytobase_api"
   description = "Daytobase serverless server that serves requests."
 }
