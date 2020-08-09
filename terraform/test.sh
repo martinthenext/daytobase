@@ -1,6 +1,6 @@
 #!/bin/bash
 
-terraform init
+# terraform init
 terraform apply -auto-approve
 
 # test
@@ -18,4 +18,4 @@ printf "\n"
 toilet "test end" -f future --gay
 
 # cleanup
-terraform destroy -auto-approve
+# terraform destroy -auto-approve
