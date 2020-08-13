@@ -134,12 +134,14 @@ resource "random_id" "randomBucketId" {
 }
 
 resource "aws_s3_bucket" "daytobase" {
+  tags   = var.tags
   bucket = "daytobase-${random_id.randomBucketId.hex}"
   acl    = "private"
   # TODO: encrypt
 }
 
 resource "aws_s3_bucket_object" "testObject" {
+  tags   = var.tags
   bucket = aws_s3_bucket.daytobase.bucket
   # TODO: instead of a dumb test file, we could already upload an empty database?
   key    = "test_file"
