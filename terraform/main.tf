@@ -7,6 +7,14 @@ provider "archive" {
   version = "~>1.3"
 }
 
+provider "random" {
+  version = "~> 2.3"
+}
+
+provider "null" {
+  version = "~> 2.1"
+}
+
 resource "null_resource" "pip" {
   triggers = {
     main         = "${base64sha256(file("../lambda/main.py"))}"
@@ -31,22 +39,23 @@ resource "aws_lambda_function" "daytobase" {
   function_name    = "daytobase_lambda"
   handler          = "main.handler"
   runtime          = "python3.8"
-  role             = aws_iam_role.lambda_exec.arn
+  role             = aws_iam_role.daytobase.arn
   filename         = "/tmp/lambda.zip"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   environment {
     variables = {
       TELEGRAM_TOKEN = var.telegram_token
+      S3_BUCKET_ID   = aws_s3_bucket.daytobase.id
     }
   }
 }
 
-resource "aws_iam_role" "lambda_exec" {
+resource "aws_iam_role" "daytobase" {
   tags        = var.tags
-  name        = "daytobase_iam"
+  name        = "daytobase_iam_role"
   path        = "/"
-  description = "Allows Lambda Function to call AWS services on your behalf."
+  description = "Allows Lambda Function to call AWS services on your behalf. Also has access to the S3 bucket."
 
   assume_role_policy = <<EOF
 {
@@ -65,8 +74,31 @@ resource "aws_iam_role" "lambda_exec" {
 EOF
 }
 
+resource "aws_iam_role_policy" "s3_policy" {
+  name = "test_policy"
+  role = aws_iam_role.daytobase.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ExampleStmt",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "arn:aws:s3:::AWSDOC-EXAMPLE-BUCKET/*"
+      ]
+    }
+  ]
+}
+  EOF
+}
+
 resource "aws_iam_role_policy_attachment" "logs_policy" {
-  role       = aws_iam_role.lambda_exec.name
+  role       = aws_iam_role.daytobase.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -87,6 +119,62 @@ resource "aws_lambda_permission" "apigw" {
 #   name              = "/aws/lambda/${aws_lambda_function.daytobase.function_name}"
 #   retention_in_days = 30
 # }
+
+
+# -----------------------------------------------------------------------------
+# my BUCKIT
+# -----------------------------------------------------------------------------
+
+resource "random_id" "randomBucketId" {
+  # keepers = {
+  #   # Generate a new ID only when a new resource group is defined
+  #   resource_group = azurerm_resource_group.rg.name
+  # }
+  byte_length = 8
+}
+
+resource "aws_s3_bucket" "daytobase" {
+  bucket = "daytobase-${random_id.randomBucketId.hex}"
+  acl    = "private"
+  # TODO: encrypt
+}
+
+resource "aws_s3_bucket_object" "testObject" {
+  bucket = aws_s3_bucket.daytobase.bucket
+  # TODO: instead of a dumb test file, we could already upload an empty database?
+  key    = "test_file"
+  source = "../README.md"
+
+  etag = filemd5("../README.md")
+}
+
+resource "aws_s3_bucket_policy" "daytobase" {
+  bucket = aws_s3_bucket.daytobase.id
+
+  policy = <<POLICY
+{
+  "Id": "DaytobaseBucketPolicy",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDaytobaseRoleToS3",
+      "Action": [
+        "s3:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.daytobase.arn}/*"
+      ],
+      "Principal": {
+        "AWS": [
+          "${aws_iam_role.daytobase.arn}"
+        ]
+      }
+    }
+  ]
+}
+POLICY
+}
 
 
 # -----------------------------------------------------------------------------
@@ -162,6 +250,15 @@ resource "aws_api_gateway_deployment" "deployment" {
   }
 }
 
+# -----------------------------------------------------------------------------
+# outputs being put out
+# -----------------------------------------------------------------------------
+
+
 output "api_url" {
   value = "${aws_api_gateway_deployment.deployment.invoke_url}/${aws_api_gateway_resource.proxy.path_part}"
+}
+
+output "bucket_id" {
+  value = aws_s3_bucket.daytobase.id
 }
