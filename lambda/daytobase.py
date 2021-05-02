@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
 from pymongo import MongoClient, TEXT, DESCENDING
 from datetime import datetime, timedelta
 import settings
 import re
-import unicodecsv as csv
+import csv
 import os
 import subprocess
 import uuid
@@ -43,14 +44,14 @@ _Commands_
 Service update channel - @daytobase
 
 '''
-HASHTAG_RE = re.compile(ur'#\w+', re.UNICODE)
+HASHTAG_RE = re.compile(r'#\w+', re.UNICODE)
 N_RECENT = 10
 LONG_TIME_FORMAT = '%Y.%m.%d %H:%M:%S'
 SHORT_TIME_FORMAT = '%Y.%m.%d %H:%M'
 SET_TIME_FORMAT = '%H:%M'
 DAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-POSTED_MSG = u'💿'
-EMPTY_MSG = u'¯\_(ツ)_/¯'
+POSTED_MSG = '💿'
+EMPTY_MSG = '¯\_(ツ)_/¯'
 
 
 def archive_and_host(path, zip_pwd):
@@ -96,7 +97,7 @@ def get_text_repr(doc):
     time = doc['time']
     day_shortname = get_day_shortname(time)
     time_str = '%s (%s)' % (time.strftime(SHORT_TIME_FORMAT), day_shortname)
-    text = u'•' + ' %s\n%s' % (time_str, doc['post'])
+    text = '•' + ' %s\n%s' % (time_str, doc['post'])
     return text
 
 
@@ -151,11 +152,11 @@ def undo(bot, update):
     user = update.message.from_user
     user_collection = get_user_collection(user)
 
-    last_added = user_collection.find({}).sort('_id', -1).next()
+    last_added = next(user_collection.find({}).sort('_id', -1))
     text = get_text_repr(last_added)
     id_to_remove = last_added['_id']
     user_collection.remove(id_to_remove)
-    update.message.reply_text(u'🗑\n\n' + text)
+    update.message.reply_text('🗑\n\n' + text)
 
 
 def get_first_hashtag(post):
@@ -182,7 +183,7 @@ def export(bot, update):
         find['tags'] = {'$in': find_tags}
 
     cur = user_collection.find(find).sort('time', -1)
-    
+
     if not os.path.exists(settings.TEMP_DIR):
         os.makedirs(settings.TEMP_DIR)
 
@@ -201,7 +202,7 @@ def export(bot, update):
     chat_id = update.message.chat_id
     bot.send_document(chat_id, url)
 
-    update.message.reply_text(u'\U0001F4E9' + ' password: `%s`' % password, 
+    update.message.reply_text('\U0001F4E9' + ' password: `%s`' % password,
                               parse_mode='Markdown')
 
 
@@ -247,14 +248,14 @@ def stats(bot, update):
         response += 'New records over past 30 days:  `{}`\n'.format(sum(recent_counts))
         active_colls = sum([c > 0 for c in recent_counts])
         response += 'Users active over past 30 days: `{}`\n'.format(active_colls)
-    
+
     update.message.reply_text(response, parse_mode='Markdown')
 
 
 def count(bot, update):
     user = update.message.from_user
     user_coll = get_user_collection(user)
-    
+
     msg = update.message.text.replace('/export', '')
     find_tags = [t[1:] for t in re.findall(HASHTAG_RE, msg)]
 
@@ -267,7 +268,7 @@ def count(bot, update):
                     }
                 )
             ]
-    
+
     if find_tags:
         tag_list = ' or '.join(['*{}*'.format(t) for t in find_tags])
         count_summary = '🗄 tagged {}:\n'.format(tag_list)
@@ -281,12 +282,12 @@ def count(bot, update):
         count_summary += '- {}: {}\n'.format(interval_name, count)
 
     update.message.reply_text(count_summary, parse_mode='Markdown')
-    
+
 
 def pm(bot, update):
     msg = update.message.text
     user = update.message.from_user
-    
+
     user_collection = get_user_collection(user)
     doc = get_document_from_message(msg)
     doc_id = user_collection.insert_one(doc)
@@ -332,4 +333,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
